@@ -39,6 +39,40 @@ def game_over(screen: pg.Surface) -> None: # 演習1
     pg.display.update()
     time.sleep(5)
 
+
+class Poison(pg.sprite.Sprite):
+    def __init__(self, surface: pg.Surface, x: int, y: int, speed: int = 2):
+        """毒アイテムを初期化する関数
+
+        Args:
+            surface (pg.Surface): 画面のSurface
+            x (int): 毒アイテムのX座標
+            y (int): 毒アイテムのY座標
+            speed (int, optional): 落下スピード、デフォルト値2
+        """
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.vx = 0
+        self.vy = +5
+        self.scale = random.uniform(0.3, 0.5)
+        self.speed = speed
+        # 毒アイテムの画像を複数にしてみる
+        self.image_list = ["./fig/poison.png", "./fig/poison1.png"]
+        self.image = pg.transform.rotozoom(pg.image.load(self.image_list[random.randint(0, len(self.image_list) - 1)]), 0, self.scale)
+        self.screen = surface
+        self.rect = self.image.get_rect()
+        self.rect.centerx = self.x
+        self.rect.centery = self.y
+        
+    def update(self):
+        """毒アイテムの更新関数
+        """
+        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
+        self.x = self.rect.centerx
+        self.y = self.rect.centery
+
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -47,7 +81,12 @@ def main():
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
 
-    
+    # 毒アイテムのリスト
+    poisons = pg.sprite.Group()
+    # 毒アイテムの速度(倍率)
+    poison_speed = 1
+    # 毒アイテムの出現頻度(フレーム)
+    poison_spwan_rate = 150
 
     clock = pg.time.Clock()
     tmr = 0         
@@ -70,8 +109,36 @@ def main():
         if check_bound(kk_rct) != (True,True):
             kk_rct.move_ip(-sum_mv[0],-sum_mv[1])
 
+        if tmr % 150 == 0:
+            # 毒アイテムの速度を徐々に上げる
+            poison_speed += 0.25
+            print(poison_speed)
+            # 毒アイテムの出現頻度を徐々に上げる(下限あり)
+            if poison_spwan_rate > 25:
+                poison_spwan_rate -= 10
+            else:
+                pass
+            print(poison_spwan_rate)
+
+
+        if tmr % poison_spwan_rate  == 0:
+            poisons.add(Poison(screen, random.randint(0, WIDTH), -100, poison_speed))
+
         screen.blit(kk_img, kk_rct)
         
+        poisons.draw(screen)
+        poisons.update()
+
+        #毒アイテムにあたってしまった時の処理
+        for poison in poisons:
+            if kk_rct.colliderect(poison.rect):
+                # ここにライフ減算処理いれたい
+                poisons.remove(poison)
+            
+            #画面外に行ったら消去
+            if poison.y - poison.image.height * poison.scale  > HEIGHT:
+                poisons.remove(poison)
+
         pg.display.update()
         tmr += 1
         clock.tick(50)
