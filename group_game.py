@@ -188,7 +188,6 @@ def main() -> None:
 
     clock = pg.time.Clock()
     tmr = 0
-    score = 0  # スコアは他機能とのマージ後に実装予定のため，現在は0固定
 
     # ライフオブジェクトの生成（初期ライフ数：3）
     life = Life(initial_lives=3)
@@ -196,7 +195,6 @@ def main() -> None:
     items: list[Item] = []
     ITEM_SPAWN_INTERVAL = 60  # アイテムを生成するフレーム間隔
 
-    score_font = pg.font.SysFont(None, 45)
 
     while True:
         for event in pg.event.get():
@@ -247,9 +245,6 @@ def main() -> None:
 
         # ── UI 描画（ライフ・スコア）────────────────────
         life.draw(screen)
-        # スコアは左下に表示（スコア加算ロジックは他機能とのマージ後に実装予定）
-        score_txt = score_font.render(f"SCORE: {score}", True, (255, 255, 0))
-        screen.blit(score_txt, (10, HEIGHT - 45))
 
         pg.display.update()
         tmr += 1
