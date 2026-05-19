@@ -62,6 +62,27 @@ class Item(pg.sprite.Sprite):
             self.kill()  # アイテムが画面外に出たら削除する
 
 
+class Score:
+    """
+    スコアを管理するクラス
+    """
+    def __init__(self):
+        self.value = 0
+        self.font = pg.font.Font(None, 36)
+        self.color = (0, 0, 255)
+        self.value = 0
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 100, HEIGHT-50
+
+    def update(self, screen: pg.Surface):
+        """
+        スコアを更新して画面に表示する関数
+        """
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -70,8 +91,7 @@ def main():
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
     items = pg.sprite.Group()  # アイテムを管理するグループ
-
-    
+    score = Score()  # スコア管理のインスタンスを作成
 
     clock = pg.time.Clock()
     tmr = 0         
@@ -96,23 +116,23 @@ def main():
 
         screen.blit(kk_img, kk_rct)
 
-        if tmr % 300 == 0:
+        if tmr % 300 == 0:  # 300フレームごとにアイテムを生成する
             item = Item()
             items.add(item)
 
         # アイテムとこうかとんの衝突判定
         for item in items:
             if kk_rct.colliderect(item.rect):
-                score += 5 #  スコアを加算する
+                score.value += 5  #  スコアを加算する
                 item.kill()  # アイテムを削除する
         
         items.update()
         items.draw(screen)
+        score.update(screen)
 
         pg.display.update()
         tmr += 1
         clock.tick(50)
-
 
 
 if __name__ == "__main__":
