@@ -39,6 +39,29 @@ def game_over(screen: pg.Surface) -> None: # 演習1
     pg.display.update()
     time.sleep(5)
 
+
+class Item(pg.sprite.Sprite):
+    """
+    得点アイテムに関するクラス
+    """
+    image = [pg.image.load("./fig/coin.png"), pg.image.load("./fig/ame.jpg")] # アイテムの画像をリストで管理
+
+    def __init__ (self):
+        super().__init__()
+        self.image = pg.transform.scale(random.choice(__class__.image),(40, 40)) #  アイテムの画像をランダムに選択してサイズを変更
+        self.rect = self.image.get_rect()
+        self.rect.center = random.randint(0, WIDTH), 0
+        self.vy = 5  # アイテムの落下速度
+
+    def update(self):
+        """
+        アイテムを落下させる関数
+        """
+        self.rect.move_ip(0, self.vy)
+        if self.rect.top > HEIGHT:
+            self.kill()  # アイテムが画面外に出たら削除する
+
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -46,6 +69,7 @@ def main():
     kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
+    items = pg.sprite.Group()  # アイテムを管理するグループ
 
     
 
@@ -71,7 +95,20 @@ def main():
             kk_rct.move_ip(-sum_mv[0],-sum_mv[1])
 
         screen.blit(kk_img, kk_rct)
+
+        if tmr % 300 == 0:
+            item = Item()
+            items.add(item)
+
+        # アイテムとこうかとんの衝突判定
+        for item in items:
+            if kk_rct.colliderect(item.rect):
+                score += 5 #  スコアを加算する
+                item.kill()  # アイテムを削除する
         
+        items.update()
+        items.draw(screen)
+
         pg.display.update()
         tmr += 1
         clock.tick(50)
