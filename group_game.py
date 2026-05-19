@@ -37,6 +37,48 @@ def game_over(screen: pg.Surface) -> None: # 演習1
     time.sleep(5)
 
 
+class Item(pg.sprite.Sprite):
+    """
+    得点アイテムに関するクラス
+    """
+    image = [pg.image.load("./fig/coin.png"), pg.image.load("./fig/ame.jpg")] # アイテムの画像をリストで管理
+
+    def __init__ (self):
+        super().__init__()
+        self.image = pg.transform.scale(random.choice(__class__.image),(40, 40)) #  アイテムの画像をランダムに選択してサイズを変更
+        self.rect = self.image.get_rect()
+        self.rect.center = random.randint(0, WIDTH), 0
+        self.vy = 5  # アイテムの落下速度
+
+    def update(self):
+        """
+        アイテムを落下させる関数
+        """
+        self.rect.move_ip(0, self.vy)
+        if self.rect.top > HEIGHT:
+            self.kill()  # アイテムが画面外に出たら削除する
+
+
+class Score:
+    """
+    スコアを管理するクラス
+    """
+    def __init__(self):
+        self.value = 0
+        self.font = pg.font.Font(None, 36)
+        self.color = (0, 0, 255)
+        self.value = 0
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 100, HEIGHT-50
+
+    def update(self, screen: pg.Surface):
+        """
+        スコアを更新して画面に表示する関数
+        """
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
 class Poison(pg.sprite.Sprite):
     def __init__(self, surface: pg.Surface, x: int, y: int, speed: int = 2):
         """毒アイテムを初期化する関数
@@ -88,6 +130,8 @@ def main():
     kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
+    items = pg.sprite.Group()  # アイテムを管理するグループ
+    score = Score()  # スコア管理のインスタンスを作成
 
     # 毒アイテムのリスト
     poisons = pg.sprite.Group()
@@ -140,6 +184,19 @@ def main():
 
         screen.blit(kk_img, kk_rct)
 
+        if tmr % 300 == 0:  # 300フレームごとにアイテムを生成する
+            item = Item()
+            items.add(item)
+
+        # アイテムとこうかとんの衝突判定
+        for item in items:
+            if kk_rct.colliderect(item.rect):
+                score.value += 5  #  スコアを加算する
+                item.kill()  # アイテムを削除する
+        
+        items.update()
+        items.draw(screen)
+        score.update(screen)
         draw_stopwatch(screen, elapsed_sec)
 
         
@@ -159,7 +216,6 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
-
 
 
 if __name__ == "__main__":
