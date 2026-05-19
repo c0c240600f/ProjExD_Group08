@@ -54,61 +54,6 @@ def game_over(screen: pg.Surface) -> None:
     time.sleep(5)
 
 
-class Item:
-    """
-    落下アイテムを管理するクラス。
-
-    画面上部のランダムな位置に生成され，一定速度で落下する。
-    キャラクターに触れるとスコア加算，画面下端を超えるとライフ減少のトリガーとなる。
-
-    Attributes:
-        img (pg.Surface): アイテムの画像
-        rct (pg.Rect): アイテムの矩形領域（位置と大きさ）
-        speed (int): 落下速度（ピクセル／フレーム）
-    """
-
-    _imgs: list[pg.Surface] = []  # 画像はクラス変数として共有（初回のみ読み込み）
-
-    def __init__(self) -> None:
-        """
-        アイテムをランダムな位置・速度で初期化する。
-        画像リストが空の場合のみ fig/0.png～9.png を読み込む。
-        """
-        if not Item._imgs:
-            for i in range(10):
-                img = pg.transform.rotozoom(
-                    pg.image.load(f"fig/{i}.png"), 0, 0.5
-                )
-                Item._imgs.append(img)
-
-        self.img: pg.Surface = random.choice(Item._imgs)
-        self.rct: pg.Rect = self.img.get_rect()
-        # 画面横幅内のランダムなX座標に配置
-        self.rct.x = random.randint(0, WIDTH - self.rct.width)
-        # 画面上端より少し上からスタート
-        self.rct.y = -self.rct.height
-        self.speed: int = random.randint(3, 7)
-
-    def update(self) -> bool:
-        """
-        アイテムを1フレーム分落下させる。
-
-        Returns:
-            bool: 画面下端を超えた（取り逃した）場合は True，それ以外は False
-        """
-        self.rct.y += self.speed
-        return self.rct.top > HEIGHT
-
-    def draw(self, screen: pg.Surface) -> None:
-        """
-        アイテムを画面に描画する。
-
-        Args:
-            screen (pg.Surface): 描画対象のサーフェス
-        """
-        screen.blit(self.img, self.rct)
-
-
 class Life:
     """
     プレイヤーのライフ（残機）を管理するクラス。
@@ -185,6 +130,8 @@ def main() -> None:
     kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
+    items = pg.sprite.Group()  # アイテムを管理するグループ
+    score = Score()  # スコア管理のインスタンスを作成
 
     clock = pg.time.Clock()
     tmr = 0
@@ -192,14 +139,27 @@ def main() -> None:
     # ライフオブジェクトの生成（初期ライフ数：3）
     life = Life(initial_lives=3)
 
-    items: list[Item] = []
-    ITEM_SPAWN_INTERVAL = 60  # アイテムを生成するフレーム間隔
+    # 毒アイテムのリスト
+    poisons = pg.sprite.Group()
+    # 毒アイテムの速度(倍率)
+    poison_speed = 1
+    # 毒アイテムの出現頻度(フレーム)
+    poison_spwan_rate = 150
 
+    clock = pg.time.Clock()
+    tmr = 0        
+
+    start_time = pg.time.get_ticks()
 
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
+            
+        elapsed_ms = pg.time.get_ticks() - start_time
+        elapsed_sec = elapsed_ms // 1000
+
+        screen.blit(bg_img, [0, 0])
 
         # ライフが0になったらゲームオーバー処理を呼び出して終了
         if not life.is_alive():
@@ -219,29 +179,6 @@ def main() -> None:
         # 画面外に出た場合は元の位置に戻す
         if check_bound(kk_rct) != (True, True):
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
-
-        # ── アイテム生成 ──────────────────────────────
-        if tmr % ITEM_SPAWN_INTERVAL == 0:
-            items.append(Item())
-
-        # ── アイテム更新・当たり判定・ライフ管理 ─────────
-        active_items: list[Item] = []
-        for item in items:
-            missed = item.update()  # 落下処理。画面外に出たら True
-            if missed:
-                # 画面下端を超えたアイテムは消去（ダメージなし）
-                pass
-            elif kk_rct.colliderect(item.rct):
-                # アイテムに当たった → ライフ減少（ダメージ）
-                life.decrease()
-            else:
-                # 画面内にある通常のアイテムは描画して保持
-                active_items.append(item)
-                item.draw(screen)
-        items = active_items  # 当たり・画面外アイテムを除いた新リストに更新
-
-        # ── キャラクター描画 ──────────────────────────
-        screen.blit(kk_img, kk_rct)
 
         # ── UI 描画（ライフ・スコア）────────────────────
         life.draw(screen)
