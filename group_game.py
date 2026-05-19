@@ -188,7 +188,7 @@ def main() -> None:
 
     clock = pg.time.Clock()
     tmr = 0
-    score = 0
+    score = 0  # スコアは他機能とのマージ後に実装予定のため，現在は0固定
 
     # ライフオブジェクトの生成（初期ライフ数：3）
     life = Life(initial_lives=3)
@@ -231,24 +231,25 @@ def main() -> None:
         for item in items:
             missed = item.update()  # 落下処理。画面外に出たら True
             if missed:
-                # 取り逃しによるライフ減少
-                life.decrease()
+                # 画面下端を超えたアイテムは消去（ダメージなし）
+                pass
             elif kk_rct.colliderect(item.rct):
-                # キャッチ成功：スコアを加算してアイテムを消去
-                score += 10
+                # アイテムに当たった → ライフ減少（ダメージ）
+                life.decrease()
             else:
                 # 画面内にある通常のアイテムは描画して保持
                 active_items.append(item)
                 item.draw(screen)
-        items = active_items  # キャッチ済み・取り逃しアイテムを除いた新リストに更新
+        items = active_items  # 当たり・画面外アイテムを除いた新リストに更新
 
         # ── キャラクター描画 ──────────────────────────
         screen.blit(kk_img, kk_rct)
 
         # ── UI 描画（ライフ・スコア）────────────────────
         life.draw(screen)
+        # スコアは左下に表示（スコア加算ロジックは他機能とのマージ後に実装予定）
         score_txt = score_font.render(f"SCORE: {score}", True, (255, 255, 0))
-        screen.blit(score_txt, (WIDTH - 200, 10))
+        screen.blit(score_txt, (10, HEIGHT - 45))
 
         pg.display.update()
         tmr += 1
