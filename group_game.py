@@ -150,12 +150,12 @@ class Score:
     """
     def __init__(self):
         self.value = 0
-        self.font = pg.font.Font(None, 36)
+        self.font = pg.font.Font(None, 40)
         self.color = (255, 0, 0)
         self.count = 0
         self.image = self.font.render(f"Score: {self.value}", True, self.color)
         self.rect = self.image.get_rect()
-        self.rect.center = 100, HEIGHT-50
+        self.rect.center = 100, HEIGHT-80
         self.combo_value = 0
         self.combo_status = False
         self.combo_add_value = 0  # コンボ中のポイント倍率
@@ -252,7 +252,7 @@ def main() -> None:
     """ゲームのメインループ。初期化・更新・描画を毎フレーム処理する。"""
     pg.display.set_caption("GROUP_08 落ち物キャッチゲーム")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.image.load("fig/pg_bg.jpg")
+    bg_img = pg.transform.scale(pg.image.load("fig/sky_bg.jpg"), (WIDTH, HEIGHT))
     kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
