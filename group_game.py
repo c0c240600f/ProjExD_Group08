@@ -126,7 +126,7 @@ class Item(pg.sprite.Sprite):
     """
     得点アイテムに関するクラス
     """
-    image = [pg.image.load("./fig/coin.png"), pg.image.load("./fig/ame.png")] # アイテムの画像をリストで管理
+    image = [pg.image.load("./fig/coin.png"), pg.image.load("./fig/ame.png"), pg.image.load("./fig/apple.png")] # アイテムの画像をリストで管理
 
     def __init__ (self):
         super().__init__()
@@ -219,7 +219,7 @@ class Poison(pg.sprite.Sprite):
         self.scale = random.uniform(0.3, 0.5)
         self.speed = speed
         # 毒アイテムの画像を複数にしてみる
-        self.image_list = ["./fig/poison.png", "./fig/poison1.png"]
+        self.image_list = ["./fig/poison.png", "./fig/poison1.png", "./fig/dokurinngo.png"]
         self.image = pg.transform.rotozoom(pg.image.load(self.image_list[random.randint(0, len(self.image_list) - 1)]), 0, self.scale)
         self.screen = surface
         self.rect = self.image.get_rect()
@@ -227,7 +227,8 @@ class Poison(pg.sprite.Sprite):
         self.rect.centery = self.y
         
     def update(self):
-        """毒アイテムの更新関数
+        """
+        毒アイテムの更新関数
         """
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
         self.x = self.rect.centerx
