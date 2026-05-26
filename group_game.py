@@ -216,10 +216,10 @@ class Poison(pg.sprite.Sprite):
         self.y = y
         self.vx = 0
         self.vy = +5
-        self.scale = random.uniform(0.3, 0.5)
+        self.scale = random.uniform(0.2, 0.3)
         self.speed = speed
         # 毒アイテムの画像を複数にしてみる
-        self.image_list = ["./fig/poison.png", "./fig/poison1.png", "./fig/dokurinngo.png"]
+        self.image_list = ["./fig/poison.png", "./fig/bomb0.png", "./fig/dokurinngo.png"]
         self.image = pg.transform.rotozoom(pg.image.load(self.image_list[random.randint(0, len(self.image_list) - 1)]), 0, self.scale)
         self.screen = surface
         self.rect = self.image.get_rect()
