@@ -1,4 +1,5 @@
 # 落ち物キャッチゲーム
+![title](fig/screen_shot.png)
 
 ## 実行環境の必要条件
 * python >= 3.10
