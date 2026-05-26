@@ -168,19 +168,19 @@ class Score:
 
         if self.combo_status:
             # self.color = (255, 0, 0)  # コンボ中は赤色にする
-            self.text += f"\nCOMBO! x{self.combo_add_value}"  # コンボ中のテキストを追加
+            self.text += f" | COMBO! x{self.combo_add_value}"  # コンボ中のテキストを追加
 
 
         # 点数によって色を変化
-        x = self.value % 256
+        x = int(self.value * 1.25 % 256)
         self.color = (255, 0, x)
 
-        # 50点ごとに10フレーム点滅
-        if self.value % 50 == 0 and self.value != 0 and self.count == 0:
-            self.count = 10
-
+        # スコアが増えたときに点滅させるための処理
         if self.count > 0:
-            drow_color = (255, 255, 0) if self.count % 2 == 0 else (0, 0, 0)
+            r = random.randint(0, 255)
+            g = random.randint(0, 255)
+            b = random.randint(0, 255)
+            drow_color = (r, g, b)
             self.count -= 1
         else:
             drow_color = self.color
@@ -200,6 +200,7 @@ class Score:
         if self.combo_value % 25 == 0:
             self.combo_status = True
             self.combo_add_value += 2  # コンボが続くごとに倍率を上げる
+        self.count = 12  # スコアが増えたときに点滅させるためのカウンター
     
 class Poison(pg.sprite.Sprite):
     def __init__(self, surface: pg.Surface, x: int, y: int, speed: int = 2):
