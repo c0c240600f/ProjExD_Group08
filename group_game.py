@@ -151,9 +151,10 @@ class Score:
     def __init__(self):
         self.value = 0
         self.font = pg.font.Font(None, 36)
-        self.color = (0, 0, 255)
+        self.color = (255, 0, 0)
+        self.count = 0
         self.value = 0
-        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        self.image = self.font.render(f"Score: {self.value}", True, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
 
@@ -161,7 +162,22 @@ class Score:
         """
         スコアを更新して画面に表示する関数
         """
-        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+
+        # 点数によって色を変化
+        x = self.value % 256
+        self.color = (255, 0, x)
+
+        # 50点ごとに10フレーム点滅
+        if self.value % 50 == 0 and self.value != 0 and self.count == 0:
+            self.count = 10
+
+        if self.count > 0:
+            drow_color = (255, 255, 0) if self.count % 2 == 0 else (0, 0, 0)
+            self.count -= 1
+        else:
+            drow_color = self.color
+
+        self.image = self.font.render(f"Score: {self.value}", 0, drow_color)
         screen.blit(self.image, self.rect)
 
 class Poison(pg.sprite.Sprite):
