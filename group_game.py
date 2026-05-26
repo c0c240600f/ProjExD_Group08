@@ -54,6 +54,63 @@ def game_over(screen: pg.Surface) -> None:
     time.sleep(5)
 
 
+class Bird(pg.sprite.Sprite):
+    """
+    プレイヤー（こうかとん）クラス
+    """
+    delta = {
+        pg.K_UP: (0, -1),
+        pg.K_DOWN: (0, +1),
+        pg.K_LEFT: (-1, 0),
+        pg.K_RIGHT: (+1, 0),
+    }
+
+    def __init__(self, num: int, xy: tuple[int, int]):
+        super().__init__()
+
+        img0 = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 0.9)
+
+        img = pg.transform.flip(img0, True, False)
+
+        self.imgs = {
+            (+1, 0): img,
+            (+1, -1): pg.transform.rotozoom(img, 45, 0.9),
+            (0, -1): pg.transform.rotozoom(img, 90, 0.9),
+            (-1, -1): pg.transform.rotozoom(img0, -45, 0.9),
+            (-1, 0): img0,
+            (-1, +1): pg.transform.rotozoom(img0, 45, 0.9),
+            (0, +1): pg.transform.rotozoom(img, -90, 0.9),
+            (+1, +1): pg.transform.rotozoom(img, -45, 0.9),
+        }
+
+        self.dire = (+1, 0)
+        self.image = self.imgs[self.dire]
+
+        self.rect = self.image.get_rect()
+        self.rect.center = xy
+
+        self.speed = 5
+
+    def update(self, key_lst: list[bool], screen: pg.Surface):
+        sum_mv = [0, 0]
+
+        for k, mv in __class__.delta.items():
+            if key_lst[k]:
+                sum_mv[0] += mv[0]
+                sum_mv[1] += mv[1]
+
+        self.rect.move_ip(self.speed * sum_mv[0], self.speed * sum_mv[1])
+
+        if check_bound(self.rect) != (True, True):
+            self.rect.move_ip(-self.speed * sum_mv[0], -self.speed * sum_mv[1])
+
+        if not (sum_mv[0] == 0 and sum_mv[1] == 0):
+            self.dire = tuple(sum_mv)
+            self.image = self.imgs[self.dire]
+
+        screen.blit(self.image, self.rect)
+
+
 class Life:
     """
     プレイヤーのライフ（残機）を管理するクラス。
@@ -201,6 +258,7 @@ class Score:
             self.combo_status = True
             self.combo_add_value += 2  # コンボが続くごとに倍率を上げる
         self.count = 12  # スコアが増えたときに点滅させるためのカウンター
+  
     
 class Poison(pg.sprite.Sprite):
     def __init__(self, surface: pg.Surface, x: int, y: int, speed: int = 2):
@@ -235,6 +293,7 @@ class Poison(pg.sprite.Sprite):
         self.x = self.rect.centerx
         self.y = self.rect.centery
 
+
 def draw_stopwatch(screen: pg.Surface, elapsed_sec: int) -> None:
     font = pg.font.Font(None, 50)
     txt = font.render(f"Time: {elapsed_sec}", True, (255, 255, 255))
@@ -252,10 +311,10 @@ def main() -> None:
     """ゲームのメインループ。初期化・更新・描画を毎フレーム処理する。"""
     pg.display.set_caption("GROUP_08 落ち物キャッチゲーム")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
+
+    bird = Bird(3, (300, 200))
     bg_img = pg.transform.scale(pg.image.load("fig/sky_bg.jpg"), (WIDTH, HEIGHT))
-    kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
-    kk_rct = kk_img.get_rect()
-    kk_rct.center = 300, 200
+
     items = pg.sprite.Group()  # アイテムを管理するグループ
     score = Score()  # スコア管理のインスタンスを作成
 
@@ -296,15 +355,7 @@ def main() -> None:
 
         # ── キャラクター移動 ──────────────────────────
         key_lst = pg.key.get_pressed()
-        sum_mv = [0, 0]
-        for key, mv in DELTA.items():
-            if key_lst[key]:
-                sum_mv[0] += mv[0]
-                sum_mv[1] += mv[1]
-        kk_rct.move_ip(sum_mv)
-        # 画面外に出た場合は元の位置に戻す
-        if check_bound(kk_rct) != (True, True):
-            kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
+        bird.update(key_lst, screen)
 
         # ── UI 描画（ライフ・スコア）────────────────────
         life.draw(screen)
@@ -320,11 +371,8 @@ def main() -> None:
                 pass
             print(poison_spwan_rate)
 
-
         if tmr % poison_spwan_rate  == 0:
             poisons.add(Poison(screen, random.randint(0, WIDTH), -100, poison_speed))
-
-        screen.blit(kk_img, kk_rct)
 
         if tmr % 20 == 0:  # 300フレームごとにアイテムを生成する
             item = Item()
@@ -332,7 +380,7 @@ def main() -> None:
 
         # アイテムとこうかとんの衝突判定
         for item in items:
-            if kk_rct.colliderect(item.rect):
+            if bird.rect.colliderect(item.rect):
                 score.increase(5)  #  スコアを加算する
                 item.kill()  # アイテムを削除する
         
@@ -340,14 +388,12 @@ def main() -> None:
         items.draw(screen)
         score.update(screen)
         draw_stopwatch(screen, elapsed_sec)
-
-        
         poisons.draw(screen)
         poisons.update()
 
         #毒アイテムにあたってしまった時の処理
         for poison in poisons:
-            if kk_rct.colliderect(poison.rect):
+            if bird.rect.colliderect(poison.rect):
                 # ここにライフ減算処理いれたい
                 life.decrease()
                 score.combo_status = False
