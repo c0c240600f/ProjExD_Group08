@@ -153,15 +153,23 @@ class Score:
         self.font = pg.font.Font(None, 36)
         self.color = (255, 0, 0)
         self.count = 0
-        self.value = 0
         self.image = self.font.render(f"Score: {self.value}", True, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
+        self.combo_value = 0
+        self.combo_status = False
+        self.combo_add_value = 0  # コンボ中のポイント倍率
 
     def update(self, screen: pg.Surface):
         """
         スコアを更新して画面に表示する関数
         """
+        self.text = f"Score: {self.value}"
+
+        if self.combo_status:
+            # self.color = (255, 0, 0)  # コンボ中は赤色にする
+            self.text += f"\nCOMBO! x{self.combo_add_value}"  # コンボ中のテキストを追加
+
 
         # 点数によって色を変化
         x = self.value % 256
@@ -177,9 +185,22 @@ class Score:
         else:
             drow_color = self.color
 
-        self.image = self.font.render(f"Score: {self.value}", 0, drow_color)
+        self.image = self.font.render(self.text, 0, drow_color)
         screen.blit(self.image, self.rect)
-
+    
+    def increase(self, points: int):
+        """
+        スコアを増加させる関数
+        """
+        if self.combo_status:
+            self.value += points * self.combo_add_value  # コンボ中はポイントを倍率で加算
+        else:
+            self.value += points
+        self.combo_value += points
+        if self.combo_value % 25 == 0:
+            self.combo_status = True
+            self.combo_add_value += 2  # コンボが続くごとに倍率を上げる
+    
 class Poison(pg.sprite.Sprite):
     def __init__(self, surface: pg.Surface, x: int, y: int, speed: int = 2):
         """毒アイテムを初期化する関数
@@ -303,14 +324,14 @@ def main() -> None:
 
         screen.blit(kk_img, kk_rct)
 
-        if tmr % 300 == 0:  # 300フレームごとにアイテムを生成する
+        if tmr % 20 == 0:  # 300フレームごとにアイテムを生成する
             item = Item()
             items.add(item)
 
         # アイテムとこうかとんの衝突判定
         for item in items:
             if kk_rct.colliderect(item.rect):
-                score.value += 5  #  スコアを加算する
+                score.increase(5)  #  スコアを加算する
                 item.kill()  # アイテムを削除する
         
         items.update()
@@ -327,6 +348,9 @@ def main() -> None:
             if kk_rct.colliderect(poison.rect):
                 # ここにライフ減算処理いれたい
                 life.decrease()
+                score.combo_status = False
+                score.combo_value = 0
+                score.combo_add_value = 0
                 poisons.remove(poison)
             
             #画面外に行ったら消去
