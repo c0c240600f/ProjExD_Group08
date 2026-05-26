@@ -126,7 +126,7 @@ class Item(pg.sprite.Sprite):
     """
     得点アイテムに関するクラス
     """
-    image = [pg.image.load("./fig/coin.png"), pg.image.load("./fig/ame.jpg")] # アイテムの画像をリストで管理
+    image = [pg.image.load("./fig/coin.png"), pg.image.load("./fig/ame.png")] # アイテムの画像をリストで管理
 
     def __init__ (self):
         super().__init__()
